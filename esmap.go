@@ -62,7 +62,7 @@ func sendMappings() {
 func waitUntilESReady() bool {
 	ready := false
 	log.Printf("Waiting until ES (%s) is available.\n", os.Getenv("ESHOST"))
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 60; i++ {
 		resp, err := http.Get(fmt.Sprintf("http://%s/_cluster/health", os.Getenv("ESHOST")))
 		if err != nil {
 			log.Println("Failed to check status. ", err)
@@ -90,7 +90,7 @@ func waitUntilESReady() bool {
 		}
 
 		status := health["status"].(string)
-		if status != "green" {
+		if status == "red" {
 			log.Printf("Cluster status is [%s]\n", status)
 			retry()
 			continue

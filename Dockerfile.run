@@ -1,0 +1,8 @@
+FROM gliderlabs/alpine
+
+
+RUN apk --update add ca-certificates
+
+ADD esmap /bin/esmap
+
+ENTRYPOINT ["/bin/esmap"]
