@@ -1,0 +1,7 @@
+FROM golang
+
+COPY esmap.go /go/src/github.com/mantika/esmap/esmap.go
+WORKDIR /go/src/github.com/mantika/esmap
+RUN go get -d -v ./...
+
+CMD ["go", "run", "esmap.go"]
