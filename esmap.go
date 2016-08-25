@@ -16,9 +16,47 @@ import (
 func main() {
 	if waitUntilESReady() {
 		sendMappings()
+		sendTemplates()
 	} else {
 		log.Println("ES is not ready. Won't send mappings")
 	}
+}
+
+func sendTemplates() {
+	log.Println("Will send all template files under /templates")
+	filepath.Walk("/templates", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+		if path == "/templates" && info.IsDir() {
+			return nil
+		}
+		relPath := strings.TrimPrefix(path, "/templates/")
+		if !info.IsDir() {
+			file := relPath
+			fileName := filepath.Base(relPath)
+			chunks := strings.Split(fileName, ".")
+			name := chunks[0]
+			log.Printf("Sending [%s] as template name [%s]\n", file, name)
+			fileContent, readFileErr := ioutil.ReadFile(path)
+			if readFileErr != nil {
+				log.Printf("Couldn't read file [%s]. %s\n", path, readFileErr.Error())
+				return nil
+			}
+			req, reqErr := http.NewRequest("PUT", fmt.Sprintf("http://%s/_template/%s", os.Getenv("ESHOST"), name), bytes.NewReader(fileContent))
+			if reqErr != nil {
+				log.Printf(reqErr.Error())
+				return nil
+			}
+			_, putErr := http.DefaultClient.Do(req)
+			if putErr != nil {
+				log.Printf("Couldn't post file [%s] as template [%s]. %s\n", file, name, putErr.Error())
+				return nil
+			}
+		}
+		return nil
+	})
 }
 
 func sendMappings() {
